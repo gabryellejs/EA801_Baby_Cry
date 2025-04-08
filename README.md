@@ -1,6 +1,6 @@
 # Baby Cry Detection
 
-Este projeto implementa um detector de choro de bebê utilizando um microcontrolador com um microfone, um buzzer e um display OLED. Quando um choro é detectado, o sistema toca uma melodia de ninar para acalmar o bebê.
+Este projeto implementa um detector de choro de bebê utilizando um microcontrolador com um microfone, um buzzer e um display OLED. Quando um choro é detectado, o sistema toca uma melodia de ninar para tranquilizar o bebê.
 
 ## 📌 Funcionalidades
 - Monitora o som ambiente em tempo real.
