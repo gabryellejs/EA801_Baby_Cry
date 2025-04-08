@@ -28,17 +28,26 @@ MUSICA = [
 # Buffer circular para armazenar as últimas 100 medições
 buffer_som = [0] * 100
 
-
 def atualizar_display(linha1="", linha2=""):
-    """Exibe duas linhas de texto no display OLED"""
+    """
+    Exibe duas linhas de texto no display OLED.
+    
+    :param linha1: Texto da primeira linha
+    :param linha2: Texto da segunda linha
+    """
     oled.fill(0)  # Limpa a tela
     oled.text(linha1, 0, 20)  # Primeira linha
     oled.text(linha2, 0, 35)  # Segunda linha
     oled.show()
 
-
 def tocar_nota(nota, duracao):
-    """Toca uma nota pelo tempo especificado e verifica o botão"""
+    """
+    Toca uma nota musical no buzzer pelo tempo especificado.
+    
+    :param nota: Nome da nota musical (ex: "C4")
+    :param duracao: Duração da nota em segundos
+    :return: False se o botão for pressionado para interromper, True caso contrário.
+    """
     if nota in NOTAS:
         buzzer.freq(NOTAS[nota])  # Define a frequência da nota
         buzzer.duty_u16(1000)  # Define o volume
@@ -53,17 +62,21 @@ def tocar_nota(nota, duracao):
         time.sleep(0.1)  # Pequena pausa entre as notas
     return True
 
-
 def tocar_musica():
-    """Executa a música completa, parando se o botão for pressionado"""
+    """
+    Toca a música completa armazenada na lista MUSICA.
+    Se o botão for pressionado, a execução é interrompida.
+    """
     atualizar_display("Tocando", "musica...")
     for nota, duracao in MUSICA:
         if not tocar_nota(nota, duracao):
             break  # Sai do loop se o botão for pressionado
 
-
 def detectar_choro():
-    """Atualiza o buffer de som e detecta sons altos e irregulares (possível choro) em tempo real"""
+    """
+    Atualiza o buffer de som e detecta sons altos e irregulares (possível choro) em tempo real.
+    Se um choro for detectado, a música é tocada como resposta.
+    """
     global buffer_som
     
     # Adiciona nova leitura e remove a mais antiga
@@ -83,7 +96,6 @@ def detectar_choro():
         tocar_musica()
     else:
         atualizar_display("Monitorando", "som...")
-
 
 # Loop principal: monitora o som continuamente
 while True:
