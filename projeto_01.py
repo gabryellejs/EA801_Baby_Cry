@@ -25,6 +25,10 @@ MUSICA = [
     ("G4", 0.5), ("F4", 0.5), ("E4", 0.5), ("D4", 0.5), ("C4", 0.5), ("C4", 1.0)
 ]
 
+# Buffer circular para armazenar as últimas 100 medições
+buffer_som = [0] * 100
+
+
 def atualizar_display(linha1="", linha2=""):
     """Exibe duas linhas de texto no display OLED"""
     oled.fill(0)  # Limpa a tela
@@ -32,13 +36,14 @@ def atualizar_display(linha1="", linha2=""):
     oled.text(linha2, 0, 35)  # Segunda linha
     oled.show()
 
+
 def tocar_nota(nota, duracao):
     """Toca uma nota pelo tempo especificado e verifica o botão"""
     if nota in NOTAS:
         buzzer.freq(NOTAS[nota])  # Define a frequência da nota
         buzzer.duty_u16(1000)  # Define o volume
         inicio = time.ticks_ms()  # Marca o tempo inicial
-        
+
         while time.ticks_diff(time.ticks_ms(), inicio) < duracao * 1000:
             if botao.value() == 0:  # Se o botão for pressionado, para a música
                 buzzer.duty_u16(0)
@@ -48,6 +53,7 @@ def tocar_nota(nota, duracao):
         time.sleep(0.1)  # Pequena pausa entre as notas
     return True
 
+
 def tocar_musica():
     """Executa a música completa, parando se o botão for pressionado"""
     atualizar_display("Tocando", "musica...")
@@ -55,28 +61,31 @@ def tocar_musica():
         if not tocar_nota(nota, duracao):
             break  # Sai do loop se o botão for pressionado
 
+
 def detectar_choro():
-    """Lê o microfone e detecta sons altos e irregulares (possível choro)"""
-    atualizar_display("Monitorando", "som...")
+    """Atualiza o buffer de som e detecta sons altos e irregulares (possível choro) em tempo real"""
+    global buffer_som
     
-    valores = []
-    for _ in range(100):  # Captura 100 amostras rápidas
-        valores.append(microfone.read_u16())
-        time.sleep(0.01)  # Pequeno intervalo entre leituras
-
-    media = sum(valores) / len(valores)  # Calcula o volume médio
-    pico = max(valores) - min(valores)  # Detecta variação
-
+    # Adiciona nova leitura e remove a mais antiga
+    nova_leitura = microfone.read_u16()
+    buffer_som.pop(0)
+    buffer_som.append(nova_leitura)
+    
+    # Cálculo do volume médio e variação
+    media = sum(buffer_som) / len(buffer_som)
+    pico = max(buffer_som) - min(buffer_som)
+    
     print(f"Volume médio: {media}, Pico: {pico}")  # Para depuração
-
+    
     # Definição simples para "choro": volume alto e variação grande
     if media > 30000 and pico > 15000:
         atualizar_display("Choro", "detectado!")
         tocar_musica()
+    else:
+        atualizar_display("Monitorando", "som...")
+
 
 # Loop principal: monitora o som continuamente
 while True:
     detectar_choro()
-    time.sleep(5)  # Aguarda 5 segundos antes da próxima verificação
-    
-    
+    time.sleep(1)  # Aguarda 1 segundo antes da próxima atualização
