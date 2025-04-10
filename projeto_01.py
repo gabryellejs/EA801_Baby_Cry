@@ -32,34 +32,34 @@ def atualizar_display(linha1="", linha2=""):
     """
     Exibe duas linhas de texto no display OLED.
     
-    :param linha1: Texto da primeira linha
-    :param linha2: Texto da segunda linha
+    - param linha1: Texto da primeira linha
+    - param linha2: Texto da segunda linha
     """
     oled.fill(0)  # Limpa a tela
     oled.text(linha1, 0, 20)  # Primeira linha
     oled.text(linha2, 0, 35)  # Segunda linha
-    oled.show()
+    oled.show() # Exibe a mensagem na tela
 
 def tocar_nota(nota, duracao):
     """
     Toca uma nota musical no buzzer pelo tempo especificado.
     
-    :param nota: Nome da nota musical (ex: "C4")
-    :param duracao: Duração da nota em segundos
-    :return: False se o botão for pressionado para interromper, True caso contrário.
+    - param nota: Nome da nota musical (ex: "C4")
+    - param duracao: Duração da nota em segundos
+    - return: False se o botão for pressionado para interromper, True caso contrário.
     """
     if nota in NOTAS:
         buzzer.freq(NOTAS[nota])  # Define a frequência da nota
-        buzzer.duty_u16(1000)  # Define o volume
+        buzzer.duty_u16(30000)  # Define o volume
         inicio = time.ticks_ms()  # Marca o tempo inicial
 
         while time.ticks_diff(time.ticks_ms(), inicio) < duracao * 1000:
-            if botao.value() == 0:  # Se o botão for pressionado, para a música
-                buzzer.duty_u16(0)
+            if botao.value() == 0: # Se o botão for pressionado, para a música
+                buzzer.duty_u16(0) # Silencia o buzzer
                 atualizar_display("Musica", "interrompida")
                 return False
         buzzer.duty_u16(0)  # Silencia o buzzer entre as notas
-        time.sleep(0.1)  # Pequena pausa entre as notas
+        time.sleep(0.01)  # Pequena pausa entre as notas
     return True
 
 def tocar_musica():
@@ -67,7 +67,6 @@ def tocar_musica():
     Toca a música completa armazenada na lista MUSICA.
     Se o botão for pressionado, a execução é interrompida.
     """
-    atualizar_display("Tocando", "musica...")
     for nota, duracao in MUSICA:
         if not tocar_nota(nota, duracao):
             break  # Sai do loop se o botão for pressionado
@@ -84,16 +83,18 @@ def detectar_choro():
     buffer_som.pop(0)
     buffer_som.append(nova_leitura)
     
-    # Cálculo do volume médio e variação
+    # Cálculo do volume médio e variação das amostras detectadas pelo microfone
     media = sum(buffer_som) / len(buffer_som)
     pico = max(buffer_som) - min(buffer_som)
     
     print(f"Volume médio: {media}, Pico: {pico}")  # Para depuração
+    print(f"Vetor: {buffer_som}")
     
     # Definição simples para "choro": volume alto e variação grande
     if media > 30000 and pico > 15000:
         atualizar_display("Choro", "detectado!")
         tocar_musica()
+        buffer_som = [0] * 100
     else:
         atualizar_display("Monitorando", "som...")
 
@@ -101,3 +102,5 @@ def detectar_choro():
 while True:
     detectar_choro()
     time.sleep(1)  # Aguarda 1 segundo antes da próxima atualização
+    
+    
