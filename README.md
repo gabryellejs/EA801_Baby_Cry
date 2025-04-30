@@ -10,12 +10,8 @@ Este projeto implementa um detector de choro de bebê utilizando um microcontrol
 - Possui um botão para interromper a reprodução da música.
 
 ## 🛠️ Hardware Necessário
-- Microcontrolador compatível com MicroPython (ex: ESP32, Raspberry Pi Pico, etc.)
-- Módulo Microfone (ex: MAX9814, KY-038)
-- Display OLED SSD1306 (I2C)
-- Buzzer piezoelétrico
-- Botão para interrupção
-- Fios e protoboard para conexões
+- Placa de desenvolvimento (BitDogLab)[https://github.com/BitDogLab/BitDogLab]
+- Módulo bluetooth HC06
 
 ## 🔧 Instalação e Configuração
 1. Instale o firmware MicroPython no seu microcontrolador.
