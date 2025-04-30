@@ -10,7 +10,7 @@ Este projeto implementa um detector de choro de bebê utilizando um microcontrol
 - Possui um botão para interromper a reprodução da música.
 
 ## 🛠️ Hardware Necessário
-- Placa de desenvolvimento (BitDogLab)[https://github.com/BitDogLab/BitDogLab]
+- Placa de desenvolvimento [BitDogLab](https://github.com/BitDogLab/BitDogLab)
 - Módulo bluetooth HC06
 
 ## 🔧 Instalação e Configuração
