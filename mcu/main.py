@@ -1,3 +1,5 @@
+# New version of the identification code for the MCU
+
 import array
 import math
 from machine import Pin, ADC
@@ -12,16 +14,12 @@ MIC_PIN = 26 + MIC_CHANNEL  # GPIO 28 for ADC channel 2
 
 # Sampling parameters
 SAMPLE_FREQ = 16000  # 16kHz sampling frequency
-SAMPLE_DURATION = 1  # seconds of data
+SAMPLE_DURATION = 2  # seconds of data
 SAMPLES = SAMPLE_FREQ * SAMPLE_DURATION  # Total samples to collect
-SAMPLING_INTERVAL = 5  # Sample every 5 seconds
-
-# Detection parameters
-LOW_CUT = 400  # Lower frequency cutoff for baby cry (Hz)
-HIGH_CUT = 6000  # Upper frequency cutoff for baby cry (Hz)
+SAMPLING_INTERVAL = 3  # Sample every 5 seconds
 
 # Detection threshold (originally in voltage domain)
-VOLTAGE_THRESHOLD = 0.0025  # Original voltage-based threshold
+VOLTAGE_THRESHOLD = 9e-4  # Original voltage-based threshold
 VREF = 3.3  # Reference voltage for ADC
 MAX_ADC = 65535  # Max value for 16-bit ADC
 
@@ -33,61 +31,44 @@ ADC_ENERGY_THRESHOLD = VOLTAGE_THRESHOLD * (MAX_ADC / VREF) * (MAX_ADC / VREF)
 USE_STATUS_LED = True
 LED_PIN = 25  # GPIO pin for status LED
 
+# ======= Hardcoded Filter Constants =======
+
+# Pre-computed filter coefficients for the bandpass filter
+# This eliminates the need to compute them at runtime
+
+# 4500 - 6000 Hz
+FILTER_A = [1.0, 0.8695831964878592, 0.5652084017560705]
+FILTER_B = [0.2173957991219648, 0.0, -0.2173957991219648]
+
 # ======= Baby Cry Detection Algorithm (ADC Domain) =======
 
-def design_bandpass_coefficients(low_freq, high_freq, sample_rate):
-    """Design simple IIR bandpass filter coefficients"""
-    # Normalize frequencies to Nyquist
-    f1 = low_freq / (sample_rate / 2)
-    f2 = high_freq / (sample_rate / 2)
+def apply_df2_bandpass_filter(data):
+    """
+    Direct Form II IIR bandpass filter implementation
+    Uses only 2 state variables instead of 4
+    """
+    filtered = array.array('f', data) if isinstance(data, array.array) else array.array('f', data)
     
-    # Ensure frequencies are in valid range
-    f1 = max(0.01, min(0.99, f1))
-    f2 = max(f1 + 0.01, min(0.99, f2))
+    # Direct Form II uses only two state variables
+    w1 = w2 = 0.0
     
-    # Simple coefficients for a 2nd order IIR bandpass
-    q = 1.0  # Quality factor
-    w0 = math.pi * (f1 + f2)  # Center frequency
-    bw = math.pi * (f2 - f1)  # Bandwidth
+    # Pre-fetch coefficients
+    b0, b1, b2 = FILTER_B[0], FILTER_B[1], FILTER_B[2]
+    a1, a2 = FILTER_A[1], FILTER_A[2]
     
-    # Calculate filter coefficients
-    alpha = math.sin(bw) / (2 * q)
-    
-    b0 = alpha
-    b1 = 0
-    b2 = -alpha
-    a0 = 1 + alpha
-    a1 = -2 * math.cos(w0)
-    a2 = 1 - alpha
-    
-    # Normalize coefficients
-    b = [b0/a0, b1/a0, b2/a0]
-    a = [1.0, a1/a0, a2/a0]
-    
-    return (b, a)
-
-def apply_bandpass_filter(data, b, a):
-    """Apply IIR bandpass filter to ADC data (efficient memory usage)."""
-    filtered = array.array('f')  # Start empty, append filtered values
-    
-    # Input and output history (2nd order filter)
-    x1, x2 = 0.0, 0.0
-    y1, y2 = 0.0, 0.0
-
-    for x0 in data:
-        # Apply difference equation
-        y0 = (b[0] * x0 +
-              b[1] * x1 +
-              b[2] * x2 -
-              a[1] * y1 -
-              a[2] * y2)
+    for i in range(len(filtered)):
+        x0 = filtered[i]
+        # Calculate intermediate value w0
+        w0 = x0 - a1 * w1 - a2 * w2
         
-        filtered.append(y0)
-
-        # Update histories
-        x2, x1 = x1, x0
-        y2, y1 = y1, y0
-
+        # Calculate output
+        y0 = b0 * w0 + b1 * w1 + b2 * w2
+        
+        # Update state
+        w2, w1 = w1, w0
+        
+        filtered[i] = y0
+        
     return filtered
 
 def calculate_energy(filtered_data):
@@ -103,12 +84,18 @@ def calculate_energy(filtered_data):
     return energy
 
 def detect_baby_cry(adc_data):
-    """Process ADC data directly and detect if baby crying is present"""
-    # Design filter
-    b, a = design_bandpass_coefficients(LOW_CUT, HIGH_CUT, SAMPLE_FREQ)
+    """
+    Process ADC data directly and detect if baby crying is present
     
-    # Apply filter - input is raw ADC values
-    filtered_data = apply_bandpass_filter(adc_data, b, a)
+    Args:
+        adc_data: Array of ADC samples
+        filter_type: Type of filter to use ("iir", "light", or None)
+    
+    Returns:
+        Tuple of (is_crying, energy)
+    """
+    # Apply filter
+    filtered_data = apply_df2_bandpass_filter(adc_data)
     
     # Calculate energy
     energy = calculate_energy(filtered_data)
@@ -188,7 +175,6 @@ class MicrophoneSampler:
     def run(self):
         """Main loop for microphone sampling and baby cry detection"""
         print("\n----\nBaby Cry Detection Monitor\n----\n")
-        print(f"Monitoring using {LOW_CUT}-{HIGH_CUT}Hz band")
         print(f"ADC Energy Threshold: {ADC_ENERGY_THRESHOLD}")
         print("Press Ctrl+C to stop monitoring\n")
         
@@ -207,13 +193,17 @@ class MicrophoneSampler:
                 is_crying, energy = detect_baby_cry(self.adc_buffer)
                 detection_time = utime.ticks_diff(utime.ticks_ms(), detection_start)
                 
+                voltage_enery = energy * (VREF / MAX_ADC)**2
+                
                 # Report detection results
                 if is_crying:
                     detection_count += 1
-                    print(f"[{time_str}] 🚨 BABY CRYING DETECTED! 🚨 (Energy: {energy:.2f})")
+                    print(f"[{time_str}] 🚨 BABY CRYING DETECTED! 🚨 (Energy: {voltage_enery:.5f})")
                     print(f"Detection #{detection_count}")
                 else:
-                    print(f"[{time_str}] No cry detected (Energy: {energy:.2f})")
+                    print(f"[{time_str}] No cry detected (Energy: {voltage_enery:.5f})")
+                
+                print(f"Processing time: {detection_time}ms")
                 
                 # Signal detection with LED
                 self.signal_detection(is_crying)
@@ -246,7 +236,7 @@ def main():
     except:
         pass
         
-    # Create and configure sampler
+    # Create and configure sampler with specified filter type
     sampler = MicrophoneSampler()
     sampler.init_adc()
     

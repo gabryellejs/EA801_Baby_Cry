@@ -8,7 +8,6 @@ Sample Rate      | Purpose
 96 kHz / 192 kHz | High-resolution audio — for studio or scientific use
 """
 
-
 import time
 import array
 import struct
@@ -24,7 +23,7 @@ MIC_PIN = 26 + MIC_CHANNEL  # GPIO 28 for ADC channel 2
 SAMPLE_FREQ = 16000  # 16kHz sampling frequency
 SAMPLE_DURATION = 2  # seconds of data
 SAMPLES = SAMPLE_FREQ * SAMPLE_DURATION  # Total samples to collect
-SAMPLING_INTERVAL = 10  # Sample every 10 seconds
+SAMPLING_INTERVAL = 1  # Sample every 1 second
 
 # File configuration
 DATA_DIR = "mic_data"  # Directory to store binary files
