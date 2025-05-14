@@ -89,7 +89,7 @@ def process_all_recordings(data_dir, index_path, output_dir):
 if __name__ == "__main__":
     # Set these paths to match your setup
     DATA_DIR = "data/mic_data/new_mcu"           # Directory with binary files
-    INDEX_FILE = "new_mcu_recordings.txt"   # Recording index file
+    INDEX_FILE = "data/new_mcu_recordings.txt"   # Recording index file
     OUTPUT_DIR = "data/converted_data/new_mcu"   # Where to save WAV and CSV files
     
     if len(sys.argv) > 1:

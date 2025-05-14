@@ -93,7 +93,7 @@ def detect_baby_cry(data, sample_rate, low_cut, high_cut, threshold):
     # print(f"Filter coefs:\n{a=}\n{b=}")
     
     # Apply filter
-    filtered_data = apply_df2_bandpass_filter(data)
+    filtered_data = apply_df2_bandpass_filter(data, a, b)
     
     # Calculate energy
     energy = calculate_energy(filtered_data)
@@ -292,15 +292,15 @@ def main():
         audio_type = get_audio_type(filename)
         
         # Process file
-        #start_time = utime.ticks_ms()
+        # start_time = utime.ticks_ms()
         prediction, energy = process_file(filename, SAMPLE_RATE, LOW_CUT, HIGH_CUT, VOLTAGE_THRESHOLD)
-        #elapsed_time = utime.ticks_diff(utime.ticks_ms(), start_time)
+        # elapsed_time = utime.ticks_diff(utime.ticks_ms(), start_time)
         
         print(f"  Ground Truth: {'Crying' if ground_truth else 'Not Crying'}")
         print(f"  Prediction: {'Crying' if prediction else 'Not Crying'}")
         print(f"  Audio Type: {audio_type}")
         print(f"  Energy: {energy:.6f}")
-        #print(f"  Time: {elapsed_time} ms")
+        # print(f"  Time: {elapsed_time} ms")
         
         # Store result
         results.append((filename, ground_truth, prediction, energy, audio_type))

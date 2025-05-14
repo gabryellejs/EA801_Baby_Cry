@@ -9,10 +9,10 @@ import numpy as np
 # FILTER_B = [0.329035870799306, 0.0, -0.329035870799306]
 
 # 4500 - 6000 Hz
-FILTER_A = [1.0, 0.8695831964878592, 0.5652084017560705]
-FILTER_B = [0.2173957991219648, 0.0, -0.2173957991219648]
+# FILTER_A = [1.0, 0.8695831964878592, 0.5652084017560705]
+# FILTER_B = [0.2173957991219648, 0.0, -0.2173957991219648]
 
-def apply_iir_bandpass_filter(data):
+def apply_iir_bandpass_filter(data, a, b):
     """
     Apply IIR bandpass filter using NumPy and difference equation.
     """
@@ -22,24 +22,24 @@ def apply_iir_bandpass_filter(data):
     x1 = x2 = y1 = y2 = 0.0
     for i in range(len(data)):
         x0 = data[i]
-        y0 = (FILTER_B[0] * x0 +
-              FILTER_B[1] * x1 +
-              FILTER_B[2] * x2 -
-              FILTER_A[1] * y1 -
-              FILTER_A[2] * y2)
+        y0 = (b[0] * x0 +
+              b[1] * x1 +
+              b[2] * x2 -
+              a[1] * y1 -
+              a[2] * y2)
         filtered[i] = y0
         x2, x1 = x1, x0
         y2, y1 = y1, y0
     return filtered
 
-def apply_iir_bandpass_filter_optimized(data):
+def apply_iir_bandpass_filter_optimized(data, a, b):
     """
     Optimized in-place IIR filter with NumPy.
     """
     data = np.asarray(data, dtype=np.float32).copy()  # Prevent modifying input
     x1 = x2 = y1 = y2 = 0.0
-    b0, b1, b2 = FILTER_B
-    a1, a2 = FILTER_A[1], FILTER_A[2]
+    b0, b1, b2 = b
+    a1, a2 = a[1], a[2]
     
     for i in range(len(data)):
         x0 = data[i]
@@ -49,14 +49,14 @@ def apply_iir_bandpass_filter_optimized(data):
         y2, y1 = y1, y0
     return data
 
-def apply_df2_bandpass_filter(data):
+def apply_df2_bandpass_filter(data, a, b):
     """
     Direct Form II implementation using NumPy.
     """
     data = np.asarray(data, dtype=np.float32).copy()
     w1 = w2 = 0.0
-    b0, b1, b2 = FILTER_B
-    a1, a2 = FILTER_A[1], FILTER_A[2]
+    b0, b1, b2 = b
+    a1, a2 = a[1], a[2]
 
     for i in range(len(data)):
         x0 = data[i]
@@ -66,14 +66,14 @@ def apply_df2_bandpass_filter(data):
         w2, w1 = w1, w0
     return data
 
-def apply_block_iir_filter(data, block_size=32):
+def apply_block_iir_filter(data, a, b, block_size=32):
     """
     Block-wise IIR filter using NumPy.
     """
     data = np.asarray(data, dtype=np.float32).copy()
     x1 = x2 = y1 = y2 = 0.0
-    b0, b1, b2 = FILTER_B
-    a1, a2 = FILTER_A[1], FILTER_A[2]
+    b0, b1, b2 = b
+    a1, a2 = a[1], a[2]
 
     for start in range(0, len(data), block_size):
         end = min(start + block_size, len(data))
@@ -85,14 +85,14 @@ def apply_block_iir_filter(data, block_size=32):
             y2, y1 = y1, y0
     return data
 
-def apply_fixedpoint_iir_filter(data):
+def apply_fixedpoint_iir_filter(data, a, b):
     """
     IIR filter using a state buffer (not actual fixed-point).
     """
     data = np.asarray(data, dtype=np.float32).copy()
     state = [0.0, 0.0, 0.0, 0.0]  # x1, x2, y1, y2
-    b0, b1, b2 = FILTER_B
-    a1, a2 = FILTER_A[1], FILTER_A[2]
+    b0, b1, b2 = b
+    a1, a2 = a[1], a[2]
 
     for i in range(len(data)):
         x0 = data[i]
