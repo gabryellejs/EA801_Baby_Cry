@@ -1,0 +1,33 @@
+#include <WiFi.h>
+
+const char* ssid = "SEU_WIFI";
+const char* password = "SUA_SENHA";
+
+void setup() {
+  Serial.begin(115200);
+  delay(2000);  // Aguarda estabilizar a inicialização
+
+  Serial.println("🔧 Iniciando ESP32-CAM - Teste Wi-Fi");
+
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando-se ao Wi-Fi");
+
+  int tentativas = 0;
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+    tentativas++;
+    if (tentativas > 40) {
+      Serial.println("\n❌ Falha ao conectar. Reiniciando...");
+      ESP.restart();
+    }
+  }
+
+  Serial.println("\n✅ Wi-Fi conectado!");
+  Serial.print("Endereço IP: ");
+  Serial.println(WiFi.localIP());
+}
+
+void loop() {
+  delay(10000);
+}
