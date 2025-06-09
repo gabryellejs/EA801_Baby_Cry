@@ -5,14 +5,15 @@ Cry Detector Module
 Handles microphone sampling and baby cry 
 detection using digital signal processing.
 """
-
+import gc
+import time
 import array
 import utime
 from machine import Pin, ADC
-from audio_processing import apply_bandpass_filter, calculate_energy
+from src.audio_processing import apply_bandpass_filter, calculate_energy
 from config import (
     MIC_PIN, SAMPLE_FREQ, SAMPLES, LED_PIN,
-    ADC_ENERGY_THRESHOLD, VREF, MAX_ADC
+    ADC_ENERGY_THRESHOLD, VREF, MAX_ADC, SAMPLING_INTERVAL
 )
 
 class CryDetector:
@@ -20,7 +21,7 @@ class CryDetector:
     Class for sampling audio and detecting baby cries.
     """
     
-    def __init__(self):
+    def __init__(self, threshold):
         """Initialize the cry detector with ADC and status LED."""
         # Initialize ADC for microphone
         self.adc = ADC(Pin(MIC_PIN))
@@ -34,6 +35,8 @@ class CryDetector:
         # Initialize status LED
         self.led = Pin(LED_PIN, Pin.OUT)
         self.led.value(0)  # Ensure LED is off
+        
+        self.threshold = threshold
         
         print("Cry detector initialized")
         
@@ -81,11 +84,19 @@ class CryDetector:
         
         # Convert to voltage domain for reporting (optional)
         voltage_energy = energy * (VREF / MAX_ADC)**2
-        
+            
+        print(f"Comparing with threshold = {self.threshold}")
+            
         # Determine if crying based on energy threshold
-        is_crying = energy > ADC_ENERGY_THRESHOLD
+        is_crying = voltage_energy > self.threshold
         
         return is_crying, voltage_energy
+    
+    def set_threshold(self, threshold):
+        self.threshold = threshold
+    
+    def get_threshold(self):
+        return self.threshold
     
     def cleanup(self):
         """Clean up resources when detection is stopped."""

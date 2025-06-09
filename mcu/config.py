@@ -29,11 +29,11 @@ MIC_PIN = 26 + MIC_CHANNEL  # GPIO 28 for ADC channel 2
 # Sampling frequency in Hz
 SAMPLE_FREQ = 16000
 # Duration of each sample in seconds
-SAMPLE_DURATION = 2
+SAMPLE_DURATION = 1
 # Total number of samples to collect
 SAMPLES = SAMPLE_FREQ * SAMPLE_DURATION
 # Interval between sampling sessions in seconds
-SAMPLING_INTERVAL = 4
+SAMPLING_INTERVAL = 2
 
 # ======= Detection Parameters =======
 # Reference voltage for ADC
@@ -69,3 +69,9 @@ MELODY = [
     ("G4", 0.5), ("A4", 0.5), ("G4", 1.0), ("G4", 0.5), ("F4", 0.5),
     ("E4", 0.5), ("D4", 0.5), ("C4", 0.5), ("C4", 1.0)
 ]
+
+# ======= Wi-Fi Pushover config =======
+SSID = "iPhone de Gabriel"
+PASSWORD = "12345678"
+PUSHOVER_USER_KEY = "uciyd2qp7bt5bzwhggcp5ir8qihgwi"
+PUSHOVER_API_TOKEN = "abpbk6nwqf2bba9ze5mfzrfuyuibc2"
