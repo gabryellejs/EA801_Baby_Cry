@@ -75,3 +75,8 @@ SSID = "iPhone de Gabriel"
 PASSWORD = "12345678"
 PUSHOVER_USER_KEY = "uciyd2qp7bt5bzwhggcp5ir8qihgwi"
 PUSHOVER_API_TOKEN = "abpbk6nwqf2bba9ze5mfzrfuyuibc2"
+
+# ESPCAM Configuration
+ESPCAM_IP = "172.20.10.3"  # Replace with your ESPCAM IP address
+ESPCAM_PORT = 80             # Default HTTP port for ESPCAM
+ESPCAM_TIMEOUT = 5           # Connection timeout in seconds

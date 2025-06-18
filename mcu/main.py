@@ -8,6 +8,7 @@ from src.buzzer_control import BuzzerControl
 from src.led_indicator import LedIndicator
 from src.bluetooth_interface import BluetoothInterface
 from src.pushover_client import PushoverClient
+from src.espcam_interface import ESPCAMInterface
 
 from config import (
     SAMPLING_INTERVAL, 
@@ -18,7 +19,10 @@ from config import (
     PUSHOVER_USER_KEY,
     PUSHOVER_API_TOKEN,
     VOLTAGE_THRESHOLD,
-    BUTTON_PIN
+    BUTTON_PIN,
+    ESPCAM_IP,
+    ESPCAM_PORT,
+    ESPCAM_TIMEOUT
 )
 
 def main():
@@ -36,6 +40,9 @@ def main():
         PUSHOVER_API_TOKEN
     )
     
+    # Initialize ESPCAM interface
+    espcam = ESPCAMInterface(ESPCAM_IP, ESPCAM_PORT, ESPCAM_TIMEOUT)
+    
     # Initialize button
     button = Pin(BUTTON_PIN, Pin.IN, Pin.PULL_UP)
     
@@ -44,6 +51,18 @@ def main():
 
     display.update("Conectando", "Wi-Fi...")
     client.connect_wifi()
+    
+    # Check ESPCAM availability on startup
+    print("Verificando disponibilidade da ESPCAM...")
+    camera_status = espcam.get_camera_status()
+    if camera_status['available']:
+        print(f"ESPCAM disponível em: {camera_status['web_url']}")
+        display.update("ESPCAM", "disponível")
+    else:
+        print("ESPCAM não disponível")
+        display.update("ESPCAM", "indisponível")
+    
+    time.sleep(2)  # Show status for 2 seconds
 
     try:
         calibration_flag = 0
@@ -86,7 +105,9 @@ def main():
                 display.update("Choro", "detectado!")
                 led.blink(duration_ms=100, times=5)
                 # buzzer.play_melody()
-                client.send_notification("Choro detectado!")
+                
+                # Send notification with camera link
+                client.send_notification("Choro Detectado! \n http://172.20.10.3")
             else:
                 print(f"Sem choro ({energy:.5f})")
             time.sleep(SAMPLING_INTERVAL)
